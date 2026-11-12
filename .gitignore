@@ -39,3 +39,22 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# playwright
+/test-results/
+/playwright-report/
+
+# exceção: modelo de variáveis sem segredos
+!.env.example
+
+# configuração local de ferramentas
+/.claude/
+
+# logs, dumps e temporários
+*.log
+*.dump
+*.bak
+*.sql.gz
+*.tmp
+/tmp/
+/coverage/

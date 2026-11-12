@@ -1,26 +1,77 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --cream: #faf7f2;
+  --charcoal: #252521;
+  /* Marca: usar em elementos decorativos (bordas, seleção, destaques). */
+  --terracotta: #c65d3b;
+  /* Com texto: #c65d3b não atinge 4,5:1 (4,17 com branco). Estes tons passam em AA. */
+  --terracotta-ink: #b5502f;
+  --terracotta-dark: #9a4326;
+  --olive: #66734f;
+  --sand: #e9e2d8;
+  --muted: #5f5d55;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-cream: var(--cream);
+  --color-charcoal: var(--charcoal);
+  --color-terracotta: var(--terracotta);
+  --color-terracotta-ink: var(--terracotta-ink);
+  --color-terracotta-dark: var(--terracotta-dark);
+  --color-olive: var(--olive);
+  --color-sand: var(--sand);
+  --color-muted: var(--muted);
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+  --font-display: var(--font-manrope), system-ui, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  color-scheme: light;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--cream);
+  color: var(--charcoal);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
+}
+
+:focus-visible {
+  outline: 2px solid var(--terracotta);
+  outline-offset: 2px;
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-4 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply bg-terracotta-ink hover:bg-terracotta-dark inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-4 text-sm font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-secondary {
+    @apply border-sand text-charcoal hover:bg-sand/60 inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border bg-white px-4 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-danger {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-red-200 bg-white px-4 text-sm font-semibold text-red-700 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .input {
+    @apply border-sand placeholder:text-muted/70 min-h-11 w-full rounded-lg border bg-white px-3 text-sm;
+  }
+  .label {
+    @apply mb-1 block text-sm font-medium;
+  }
+  .field-error {
+    @apply mt-1 text-sm text-red-700;
+  }
+  .skeleton {
+    @apply bg-sand animate-pulse rounded-lg;
+  }
 }
