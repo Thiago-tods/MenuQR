@@ -3,37 +3,64 @@ name: CI
 on:
   push:
     branches: [main]
+  # `pull_request` (não `pull_request_target`): PRs de forks rodam sem segredos e com token só de leitura.
   pull_request:
+  workflow_dispatch:
 
 # Menor privilégio: o job só lê o repositório.
 permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  # Cancela execuções antigas só em PRs. Na main, cada commit mantém o seu resultado.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   verify:
-    runs-on: ubuntu-latest
+    # Imagem fixa: `ubuntu-latest` está migrando de versão e pode mudar o ambiente sem aviso.
+    # Ubuntu 26.04 só depois de validar as dependências nele.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
     env:
+      NEXT_TELEMETRY_DISABLED: "1"
       # Valores fictícios: o build e os testes unitários não acessam o Supabase.
       NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
       NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder
       SUPABASE_SERVICE_ROLE_KEY: placeholder
       NEXT_PUBLIC_SITE_URL: http://localhost:3000
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      # Actions fixadas pelo SHA do commit da tag oficial (ambas com runtime node24).
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false # nenhum passo faz push; o token não fica no .git
+
+      - name: Node.js 24 e cache do npm
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24
-          cache: npm
-      - run: npm ci
-      - run: npm run format:check
-      - run: npm run lint
-      - run: npm run typecheck
-      - run: npm test
-      - run: npm run build
+          cache: npm # chave = hash do package-lock.json
+
+      # `npm ci` exige lockfile em sincronia. Sem scripts de instalação de terceiros:
+      # a única dependência com script (fsevents) é só de macOS.
+      - name: Instalar dependências
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Formato (Prettier)
+        run: npm run format:check
+
+      - name: Lint (ESLint)
+        run: npm run lint
+
+      - name: Tipos (TypeScript)
+        run: npm run typecheck
+
+      - name: Testes unitários (Vitest)
+        run: npm test
+
+      - name: Build de produção (Next.js)
+        run: npm run build
 
 # Fora do CI de propósito: `npm run test:rls`, `npm run test:e2e` e `npm run a11y` exigem um
 # projeto Supabase de TESTE com migrations e seed, e credenciais. Veja docs/TESTING.md.

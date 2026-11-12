@@ -10,6 +10,27 @@
 
 O CI roda os de "Não". Os outros exigem um projeto Supabase de **teste**, com migrations e seed, e ficam fora do CI de propósito.
 
+## CI (GitHub Actions) — `.github/workflows/ci.yml`
+
+| Item       | Valor                                                                                                                                |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Gatilhos   | `push` na `main`, `pull_request` e `workflow_dispatch` (manual).                                                                     |
+| Runner     | `ubuntu-24.04`, fixo. O `ubuntu-latest` está migrando de versão; o 26.04 só depois de validar as dependências nele.                  |
+| Node.js    | 24 (o runtime das actions também é node24).                                                                                          |
+| Actions    | `actions/checkout` v7.0.1 e `actions/setup-node` v7.1.0, fixadas pelo SHA do commit da tag oficial (comentário ao lado de cada uma). |
+| Permissões | `contents: read`; `persist-credentials: false`; sem segredos (as variáveis do Supabase são fictícias).                               |
+| Etapas     | `npm ci --ignore-scripts` → `format:check` → `lint` → `typecheck` → `test` → `build`. Cache do npm pelo `package-lock.json`.         |
+| Limites    | `timeout-minutes: 15`; execuções antigas de PR são canceladas, as da `main` não.                                                     |
+
+Reproduzir localmente (o mesmo que o CI):
+
+```powershell
+npm ci --ignore-scripts --no-audit --no-fund
+npm run format:check; npm run lint; npm run typecheck; npm test; npm run build
+```
+
+Para atualizar uma action: consulte a release oficial, confira que o `action.yml` usa `node24`, pegue o SHA da tag na API do GitHub e troque o SHA e o comentário. Nunca copie um SHA de memória.
+
 ## Unitários (Vitest) — `npm test`
 
 | Arquivo                    | Cobre                                                                                          |
